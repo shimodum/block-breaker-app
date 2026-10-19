@@ -25,5 +25,7 @@
             ← → キーでパドルを操作
         </p>
     </main>
+    
+    <script src="{{ asset('js/game.js') }}"></script>
 </body>
 </html>
