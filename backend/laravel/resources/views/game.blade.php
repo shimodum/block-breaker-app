@@ -21,11 +21,15 @@
 
         <canvas id="gameCanvas" width="480" height="320"></canvas>
 
+        <div class="start-area">
+            <button id="startButton" type="button">START</button>
+        </div>
+
         <p class="game-instructions">
             ← → キーでパドルを操作
         </p>
     </main>
-    
+
     <script src="{{ asset('js/game.js') }}"></script>
 </body>
 </html>

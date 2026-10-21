@@ -51,3 +51,19 @@ body {
     text-align: center;
     color: #cbd5e1;
 }
+
+.start-area {
+    text-align: center;
+    margin-top: 16px;
+}
+
+#startButton {
+    padding: 10px 32px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #0f172a;
+    background-color: #34d399;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}

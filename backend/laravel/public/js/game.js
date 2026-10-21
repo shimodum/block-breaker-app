@@ -1,5 +1,7 @@
-
 const canvas = document.getElementById("gameCanvas"); // Canvas要素を取得して、canvas という変数に代入している。= Canvas要素を取得して、HTMLの<canvas>要素を操作するための準備をしている。
+
+const startButton = document.getElementById("startButton"); // STARTボタンの要素を取得して、startButton という変数に代入している。= STARTボタンが押されたかどうかを管理するための準備をしている。
+
 const ctx = canvas.getContext("2d"); // 2d =2次元（2-dimensional）, 取得した上記Canvasから、2D描画用のコンテキストを取得している。= 2D描画機能を取得 = これにより、canvas上に図形を描画できるようになる。
 
 const scoreElement = document.getElementById("score");
@@ -49,9 +51,10 @@ let lives = 3; // 残りライフはミスするたびに変化するため、le
 const livesElement = document.getElementById("lives"); // livesElement はHTML要素への参照を再代入しないため、const を使用
 
 // ゲームの状態
-let isGameOver = false;
-let isGameClear = false;
-let isPaused = false;
+let isGameOver = false; // ゲームオーバーかどうかの状態を管理するためのフラグ
+let isGameClear = false; // ゲームクリアかどうかの状態を管理するためのフラグ
+let isPaused = false; // ゲームが一時停止中かどうかの状態を管理するためのフラグ
+let isStarted = false; // まだSTARTボタンが押されていない
 
 
 // パドルを描画する
@@ -131,6 +134,16 @@ function checkBallBrickCollision() {
 
 }
 
+// STARTボタンをクリックしたとき
+startButton.addEventListener("click", function () {
+    if (isStarted) {
+        return; // すでにゲームが開始されている場合は何もしない
+    }
+
+    isStarted = true;
+    startButton.hidden = true;
+})
+
 // キーを押したとき
 document.addEventListener("keydown", function (event) {
     if (event.key === "ArrowRight") {
@@ -144,7 +157,7 @@ document.addEventListener("keydown", function (event) {
     } else if (event.code === "Space" && !event.repeat) {
         event.preventDefault(); // デフォルトのスクロール動作を防ぐ
 
-        if (!isGameOver && !isGameClear) {
+        if (isStarted && !isGameOver && !isGameClear) {
             isPaused = !isPaused;
         }
     }
@@ -164,7 +177,7 @@ document.addEventListener("keyup", function (event) {
 // マウスでパドルを操作する
 canvas.addEventListener("mousemove", function (event) {
     // 一時停止中やゲーム終了後は操作を受け付けない
-    if (isPaused || isGameOver || isGameClear) {
+    if (!isStarted || isPaused || isGameOver || isGameClear) {
         return;
     }
     const rect = canvas.getBoundingClientRect();
@@ -304,6 +317,15 @@ function drawGameClear() {
     ctx.fillText("Press R to Restart", canvas.width / 2, canvas.height / 2 + 60);
 }
 
+// ゲーム開始前のメッセージを描画する
+function drawReady() {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 30px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("READY", canvas.width / 2, canvas.height / 2);
+}
+
+
 // 一時停止中のメッセージを描画する
 function drawPaused() {
     ctx.fillStyle = "#ffffff";
@@ -328,7 +350,18 @@ function checkGameClear() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // 画面をクリアしてから再描画することで、前のフレームの描画が残らないようにしている
 
-    // 一時停止中の場合はPAUSEDメッセージを描画して処理を中断
+    // ゲーム開始前の場合
+    if (!isStarted) {
+        drawPaddle();
+        drawBall();
+        drawBricks();
+        drawReady();
+
+        requestAnimationFrame(draw);
+        return;
+    }
+
+    // 一時停止中の場合
     if (isPaused) {
         drawPaddle();
         drawBall();
@@ -338,7 +371,6 @@ function draw() {
         requestAnimationFrame(draw);
         return;
     }
-
 
     movePaddle();
 
