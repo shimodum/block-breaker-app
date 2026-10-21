@@ -50,8 +50,8 @@ const livesElement = document.getElementById("lives"); // livesElement はHTML�
 
 // ゲームの状態
 let isGameOver = false;
-
 let isGameClear = false;
+let isPaused = false;
 
 
 // パドルを描画する
@@ -141,6 +141,12 @@ document.addEventListener("keydown", function (event) {
         event.preventDefault();
     } else if (event.key.toLowerCase() === "r" && (isGameOver || isGameClear)) {
         resetGame();
+    } else if (event.code === "Space" && !event.repeat) {
+        event.preventDefault(); // デフォルトのスクロール動作を防ぐ
+
+        if (!isGameOver && !isGameClear) {
+            isPaused = !isPaused;
+        }
     }
 });
 
@@ -157,6 +163,10 @@ document.addEventListener("keyup", function (event) {
 
 // マウスでパドルを操作する
 canvas.addEventListener("mousemove", function (event) {
+    // 一時停止中やゲーム終了後は操作を受け付けない
+    if (isPaused || isGameOver || isGameClear) {
+        return;
+    }
     const rect = canvas.getBoundingClientRect();
 
     // マウスのX座標をCanvas内部の座標に変換
@@ -234,6 +244,7 @@ function resetGame() {
     // ゲームの終了状態をリセット
     isGameOver = false;
     isGameClear = false;
+    isPaused = false;
 
     // ボールとパドルを初期位置に戻す
     resetBallAndPaddle();
@@ -293,6 +304,15 @@ function drawGameClear() {
     ctx.fillText("Press R to Restart", canvas.width / 2, canvas.height / 2 + 60);
 }
 
+// 一時停止中のメッセージを描画する
+function drawPaused() {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 30px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
+}
+
+
 // すべてのブロックが破壊されたか判定する
 function checkGameClear() {
     const allBroken = bricks.every(function (brick) {
@@ -307,6 +327,18 @@ function checkGameClear() {
 // すべての図形を描画する
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // 画面をクリアしてから再描画することで、前のフレームの描画が残らないようにしている
+
+    // 一時停止中の場合はPAUSEDメッセージを描画して処理を中断
+    if (isPaused) {
+        drawPaddle();
+        drawBall();
+        drawBricks();
+        drawPaused();
+
+        requestAnimationFrame(draw);
+        return;
+    }
+
 
     movePaddle();
 
