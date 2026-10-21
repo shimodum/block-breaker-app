@@ -56,6 +56,9 @@ let isGameClear = false; // ゲームクリアかどうかの状態を管理す�
 let isPaused = false; // ゲームが一時停止中かどうかの状態を管理するためのフラグ
 let isStarted = false; // まだSTARTボタンが押されていない
 
+// 音声を管理するためのオブジェクト
+const audioContext = new AudioContext();
+
 
 // パドルを描画する
 function drawPaddle() {
@@ -105,6 +108,108 @@ function addScore() {
     scoreElement.textContent = score;
 }
 
+// ブロック破壊時の効果音を再生する
+function playBrickSound() {
+    // 音を生成する
+    const oscillator = audioContext.createOscillator();
+
+    // 音量を調整する
+    const gainNode = audioContext.createGain();
+
+    // 音の種類と高さを設定する
+    oscillator.type = "square";
+    oscillator.frequency.value = 600;
+
+    // 音量を設定する
+    gainNode.gain.value = 0.08;
+
+    // 音の接続
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    // 音を再生する
+    oscillator.start();
+
+    // 0.1秒後に音を停止する
+    oscillator.stop(audioContext.currentTime + 0.1);
+}
+
+// パドル衝突時の効果音を再生する
+function playPaddleSound() {
+    // 音を生成する
+    const oscillator = audioContext.createOscillator();
+
+    // 音量を調整する
+    const gainNode = audioContext.createGain();
+
+    // 音の種類と高さを設定する
+    oscillator.type = "square";
+    oscillator.frequency.value = 300;
+
+    // 音量を設定する
+    gainNode.gain.value = 0.05;
+
+    // 音の接続
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    // 音を再生する
+    oscillator.start();
+
+    // 0.08秒後に音を停止する
+    oscillator.stop(audioContext.currentTime + 0.08);
+}
+
+// ゲームオーバー時の効果音を再生する
+function playGameOverSound() {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "square";
+    oscillator.frequency.value = 200;
+
+    gainNode.gain.value = 0.08;
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.5);
+}
+
+
+// ゲームクリア時の効果音を再生する
+function playGameClearSound() {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "square";
+    oscillator.frequency.value = 800;
+
+    gainNode.gain.value = 0.08;
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.5);
+}
+
+// 音声出力を事前に準備する
+function prepareAudio() {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    // 無音にする
+    gainNode.gain.value = 0;
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.1);
+}
+
 
 // ボールとブロックの衝突判定
 function checkBallBrickCollision() {
@@ -122,27 +227,34 @@ function checkBallBrickCollision() {
             nextY + ballRadius > brick.y &&
             nextY - ballRadius < brick.y + brickHeight;
 
-        if (hitsBrick) {
-            ballDY = -ballDY;
-            brick.status = 0;
-            addScore(); // ブロックを壊したらスコアを加算
+
+            if (hitsBrick) {
+                ballDY = -ballDY;
+                brick.status = 0;
+                addScore();
+                playBrickSound(); // ブロック破壊時に効果音を再生
+
             break; // 一度に複数のブロックに衝突することはないので、衝突したらループを抜ける
         }
-        
-
     }
-
 }
 
+
 // STARTボタンをクリックしたとき
-startButton.addEventListener("click", function () {
+startButton.addEventListener("click", async function () {
     if (isStarted) {
         return; // すでにゲームが開始されている場合は何もしない
     }
 
+    // 音声機能が停止中なら、再開完了を待つ
+    if (audioContext.state === "suspended") {
+        await audioContext.resume(); // 一時停止している音声処理を再開するメソッド
+    }
+
+     // ゲーム開始
     isStarted = true;
     startButton.hidden = true;
-})
+});
 
 // キーを押したとき
 document.addEventListener("keydown", function (event) {
@@ -226,6 +338,7 @@ function checkBallPaddleCollision() {
     
     if (hitsPaddleTop && hitsPaddleX) {
         ballDY = -ballDY; // ボールの進行方向を反転させる
+        playPaddleSound(); // パドル衝突時に効果音を再生する
     }
 }
 
@@ -279,6 +392,7 @@ function checkBallMiss() {
 
         if (lives === 0) {
             isGameOver = true;
+            playGameOverSound();
         } else {
             resetBallAndPaddle();
         }
@@ -341,8 +455,9 @@ function checkGameClear() {
         return brick.status === 0;
     });
 
-    if (allBroken) {
+    if (allBroken && !isGameClear) {
         isGameClear = true;
+        playGameClearSound();
     }
 }
 
