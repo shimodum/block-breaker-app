@@ -55,10 +55,13 @@ let isGameOver = false; // ゲームオーバーかどうかの状態を管理�
 let isGameClear = false; // ゲームクリアかどうかの状態を管理するためのフラグ
 let isPaused = false; // ゲームが一時停止中かどうかの状態を管理するためのフラグ
 let isStarted = false; // まだSTARTボタンが押されていない
+let isDrawing = false; // 描画中かどうかの状態を管理するためのフラグ
 
 // 音声を管理するためのオブジェクト
 const audioContext = new AudioContext();
 
+// BGMの繰り返し再生を管理する
+let bgmTimer = null;
 
 // パドルを描画する
 function drawPaddle() {
@@ -195,6 +198,55 @@ function playGameClearSound() {
     oscillator.stop(audioContext.currentTime + 0.5);
 }
 
+// BGM用の音を1つ鳴らす
+function playBgmNote(frequency, duration, startTime) {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "square";
+    oscillator.frequency.value = frequency;
+
+    gainNode.gain.value = 0.03;
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+}
+
+// 短いBGMメロディーを再生する
+function playBgmMelody() {
+    const startTime = audioContext.currentTime;
+
+    playBgmNote(262, 0.2, startTime);
+    playBgmNote(294, 0.2, startTime + 0.25);
+    playBgmNote(330, 0.2, startTime + 0.5);
+    playBgmNote(392, 0.2, startTime + 0.75);
+}
+
+// BGMを繰り返し再生する
+function startBgm() {
+    if (bgmTimer !== null) { // タイマーが重複して作られるのを防ぐ処理
+        return; // すでにBGMが再生中なら何もしない
+    }
+
+    playBgmMelody();
+
+    bgmTimer = setInterval(function () {
+        playBgmMelody();
+    }, 1000); // 1秒ごとにBGMを繰り返す
+}
+
+// BGMの繰り返し再生を停止する
+function stopBgm() {
+    if (bgmTimer !== null) { // タイマーが設定されているか確認
+        clearInterval(bgmTimer);
+        bgmTimer = null; // タイマーがない状態に戻す
+    }
+}
+
+
 // 音声出力を事前に準備する
 function prepareAudio() {
     const oscillator = audioContext.createOscillator();
@@ -254,6 +306,8 @@ startButton.addEventListener("click", async function () {
      // ゲーム開始
     isStarted = true;
     startButton.hidden = true;
+
+    startBgm();
 });
 
 // キーを押したとき
@@ -264,13 +318,20 @@ document.addEventListener("keydown", function (event) {
     } else if (event.key === "ArrowLeft") {
         leftPressed = true;
         event.preventDefault();
-    } else if (event.key.toLowerCase() === "r" && (isGameOver || isGameClear)) {
+    } else if (event.key.toLowerCase() === "r" && isStarted) {
         resetGame();
+        stopBgm(); // stopBgm() を先に実行することで、BGMの繰り返しタイマーが重複することを防ぐ
+        startBgm(); // ゲームリセット後にBGMを再生
     } else if (event.code === "Space" && !event.repeat) {
         event.preventDefault(); // デフォルトのスクロール動作を防ぐ
 
         if (isStarted && !isGameOver && !isGameClear) {
             isPaused = !isPaused;
+            if (isPaused) {
+                stopBgm(); // 一時停止時にBGMを停止
+            } else {
+                startBgm(); // 再開時にBGMを再生
+            }
         }
     }
 });
@@ -379,8 +440,10 @@ function resetGame() {
     bricks.length = 0; // 配列の要素をすべて削除して、空の配列にする処理
     createBricks();
 
-    // ゲームを再開
-    draw();
+    // 描画ループが停止している場合だけ再開する
+    if (!isDrawing) {
+        draw();
+    }
 }
 
 // ボールが画面下へ押したか判定する
@@ -392,6 +455,7 @@ function checkBallMiss() {
 
         if (lives === 0) {
             isGameOver = true;
+            stopBgm();
             playGameOverSound();
         } else {
             resetBallAndPaddle();
@@ -458,11 +522,14 @@ function checkGameClear() {
     if (allBroken && !isGameClear) {
         isGameClear = true;
         playGameClearSound();
+        stopBgm();
     }
 }
 
 // すべての図形を描画する
 function draw() {
+    isDrawing = true; // 描画中であることを示すフラグを立てる
+
     ctx.clearRect(0, 0, canvas.width, canvas.height); // 画面をクリアしてから再描画することで、前のフレームの描画が残らないようにしている
 
     // ゲーム開始前の場合
@@ -520,7 +587,9 @@ function draw() {
 
     // ゲームオーバーになった場合
     if (isGameOver) {
+        stopBgm();
         drawGameOver();
+        isDrawing = false; // 描画が終了したことを示すフラグを下ろす
         return; // ゲームオーバー時はこれ以上描画を続けない
     }
 
@@ -533,7 +602,9 @@ function draw() {
         drawBall();
         drawBricks();
 
+        stopBgm();
         drawGameClear();
+        isDrawing = false; // 描画が終了したことを示すフラグを下ろす
         return; // ゲームクリア時はこれ以上描画を続けない
     }
 
