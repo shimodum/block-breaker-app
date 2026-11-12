@@ -25,9 +25,13 @@
             <button id="startButton" type="button">START</button>
         </div>
 
-        <p class="game-instructions">
-            ← → キーでパドルを操作
-        </p>
+        <div class="game-instructions">
+            <p class="instructions-title">操作方法</p>
+
+            <p>← → キー または マウス：パドル移動</p>
+            <p>Spaceキー：一時停止・再開</p>
+            <p>Rキー：リスタート</p>
+        </div>
     </main>
 
     <script src="{{ asset('js/game.js') }}"></script>

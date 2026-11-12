@@ -19,7 +19,11 @@ body {
 
 .site-header h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 30px;
+}
+
+.site-header p {
+    font-size: 18px;
 }
 
 .game-container {
@@ -32,11 +36,13 @@ body {
 .game-info {
     display: flex;
     justify-content: space-between;
+    font-size: 20px;
     font-weight: bold;
 }
 
 #lives {
     color: #fb7185;
+    font-size: 24px;
 }
 
 #gameCanvas {
@@ -48,8 +54,20 @@ body {
 }
 
 .game-instructions {
+    margin-top: 20px;
     text-align: center;
     color: #cbd5e1;
+    font-size: 16px;
+}
+
+.instructions-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.game-instructions p {
+    margin: 8px 0;
 }
 
 .start-area {
