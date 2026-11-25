@@ -413,7 +413,28 @@ function checkBallPaddleCollision() {
         ballX - ballRadius <= paddleX + paddleWidth;
     
     if (hitsPaddleTop && hitsPaddleX) {
-        ballDY = -ballDY; // ボールの進行方向を反転させる
+        // パドルの中心位置を求める
+        const paddleCenter = paddleX + paddleWidth / 2;
+
+        // パドルの中心からボールまでの相対位置を求める
+        const hitPosition = (ballX - paddleCenter) / (paddleWidth / 2); 
+
+        // 相対位置を-1から1の範囲に収める
+        const normalizedHit = Math.max(-1, Math.min(1, hitPosition));
+
+        // 最大反射角度を設定する
+        const maxBounceAngle = Math.PI / 3; // 60度
+
+        // 当たり位置に応じた反射角度を求める
+        const bounceAngle = normalizedHit * maxBounceAngle;
+
+        // 現在のボールの速さを求める
+        const ballSpeed = Math.hypot(ballDX, ballDY);
+
+        // 反射角度に応じて移動方向を変更する
+        ballDX = ballSpeed * Math.sin(bounceAngle);
+        ballDY = -ballSpeed * Math.cos(bounceAngle);
+
         playPaddleSound(); // パドル衝突時に効果音を再生する
     }
 }
