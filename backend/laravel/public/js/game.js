@@ -8,22 +8,22 @@ const scoreElement = document.getElementById("score");
 
 
 // ブロックの設定
-const brickRowCount = 4;
-const brickColumnCount = 7;
-const brickWidth = 56;
-const brickHeight = 16;
+const brickRowCount = 5;
+const brickColumnCount = 8;
+const brickWidth = 45;
+const brickHeight = 14;
 const brickPaddingX = 7;
 const brickPaddingY = 7;
-const brickOffsetX = 20;
-const brickOffsetY = 25;
+const brickOffsetX = 35;
+const brickOffsetY = 45;
 
-const brickColors = ["#fb7185", "#fbbf24", "#34d399", "#60a5fa"];
+const brickColors = ["#fb7185", "#f97316","#fbbf24", "#34d399", "#60a5fa", ];
 
 const bricks = [];
 
 // ボールの位置
 let ballX = 240; // ボールの位置と移動速度は時間とともに変化するので、constではなくletを使っている。
-let ballY = 200;
+let ballY = 235;
 
 // ボールの移動速度
 let ballDX = 2;
@@ -281,13 +281,28 @@ function checkBallBrickCollision() {
 
 
             if (hitsBrick) {
-                ballDY = -ballDY;
+                const overlapX = Math.min(
+                    nextX + ballRadius - brick.x,
+                    brick.x + brickWidth - (nextX - ballRadius)
+                );
+
+                const overlapY = Math.min(
+                    nextY + ballRadius - brick.y,
+                    brick.y + brickHeight - (nextY - ballRadius)
+                );
+
+                if (overlapX < overlapY) {
+                    ballDX = -ballDX;
+                } else {
+                    ballDY = -ballDY;
+                }
+
                 brick.status = 0;
                 addScore();
-                playBrickSound(); // ブロック破壊時に効果音を再生
+                playBrickSound();
 
-            break; // 一度に複数のブロックに衝突することはないので、衝突したらループを抜ける
-        }
+                break;
+            }
     }
 }
 
@@ -411,7 +426,7 @@ function updateLives() {
 // ボールとパドルを初期位置に戻す
 function resetBallAndPaddle() {
     ballX = 240;
-    ballY = 200;
+    ballY = 235;
     ballDX = 2; // 初期のX方向の速度
     ballDY = -2; // 初期のY方向の速度
 
@@ -468,15 +483,15 @@ function drawGameOver() {
     ctx.fillStyle = "#fb7185";
     ctx.font = "bold 30px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 + 35);
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "16px Arial";
-    ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 30);
+    ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 65);
 
     ctx.fillStyle = "#cbd5e1";
     ctx.font = "14px Arial";
-    ctx.fillText("Press R to Restart", canvas.width / 2, canvas.height / 2 + 60);
+    ctx.fillText("Press R to Restart", canvas.width / 2, canvas.height / 2 + 95);
 }
 
 // ゲームクリア画面を描画する
@@ -484,15 +499,15 @@ function drawGameClear() {
     ctx.fillStyle = "#34d399";
     ctx.font = "bold 30px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("GAME CLEAR!", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("GAME CLEAR!", canvas.width / 2, canvas.height / 2 + 35);
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "16px Arial";
-    ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 30);
+    ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 65);
 
     ctx.fillStyle = "#cbd5e1";
     ctx.font = "14px Arial";
-    ctx.fillText("Press R to Restart", canvas.width / 2, canvas.height / 2 + 60);
+    ctx.fillText("Press R to Restart", canvas.width / 2, canvas.height / 2 + 95);
 }
 
 // ゲーム開始前のメッセージを描画する
@@ -500,7 +515,7 @@ function drawReady() {
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 30px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("READY", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("READY", canvas.width / 2, canvas.height / 2 + 35);
 }
 
 
